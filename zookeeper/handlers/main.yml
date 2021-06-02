@@ -1,0 +1,9 @@
+- name: Start zookeeper service
+  service:
+    name: zk
+    state: started
+
+- name: Restart zookeeper service
+  service:
+    name: zk
+    state: restarted

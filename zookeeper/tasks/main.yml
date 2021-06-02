@@ -1,0 +1,48 @@
+- name: Create zk user
+  user:
+    name: zk
+    groups: sudo
+    password: 123456
+
+- name: Create zk data folder
+  file:
+    path: /data/zookeeper
+    state: directory
+    recurse: yes
+    owner: zk
+
+- name: Download zookeeper binary
+  get_url:
+    url: "https://downloads.apache.org/zookeeper/zookeeper-{{ ZK_VERSION }}/apache-zookeeper-{{ ZK_VERSION }}-bin.tar.gz"
+    checksum: "sha512:{{ ZK_CHECKSUM }}"
+    dest: "/opt/apache-zookeeper-{{ ZK_VERSION }}-bin.tar.gz"
+    owner: zk
+
+- name: Unarchive zookeeper binary downloaded file
+  unarchive:
+    remote_src: yes
+    src: "/opt/apache-zookeeper-{{ ZK_VERSION }}-bin.tar.gz"
+    dest: /opt
+    owner: zk
+
+- name: Create a symbolic link to zookeeper
+  file:
+    src: "/opt/apache-zookeeper-{{ ZK_VERSION }}-bin"
+    dest: /opt/zookeeper
+    owner: zk
+    group: zk
+    state: link
+
+- name: Upload the zookeeper configuration file
+  copy:
+    src: files/zoo.cfg
+    dest: /opt/zookeeper/conf/zoo.cfg
+    owner: zk
+  notify: Restart zookeeper service
+
+- name: Upload the zookeeper service file
+  copy:
+    src: files/zk.service
+    dest: /etc/systemd/system/zk.service
+    owner: zk
+  notify: Start zookeeper service

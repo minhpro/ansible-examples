@@ -1,0 +1,9 @@
+---
+- name: Java play
+  hosts: all
+  become: true
+  tasks:
+    - name: install openjdk
+      apt:
+        name: openjdk-8-jdk
+        state: latest

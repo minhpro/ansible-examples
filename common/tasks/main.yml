@@ -1,0 +1,4 @@
+- name: Install tar tool
+  package:
+    name: tar
+    state: present

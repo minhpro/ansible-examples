@@ -1,0 +1,55 @@
+- name: Create kafka user
+  user:
+    name: kafka
+    groups: sudo
+    password: 123456
+
+- name: Create kafka logs folder
+  file:
+    path: /home/kafka/logs
+    state: directory
+    recurse: yes
+    owner: kafka
+
+- name: Download kafka binary
+  get_url:
+    url: "https://archive.apache.org/dist/kafka/{{ KAFKA_VERSION }}/kafka_{{ KAFKA_SCALA_VERSION }}-{{ KAFKA_VERSION }}.tgz"
+    checksum: "sha512:{{ KAFKA_CHECKSUM }}"
+    dest: "/opt/kafka_{{ KAFKA_SCALA_VERSION }}-{{ KAFKA_VERSION }}.tgz"
+    owner: kafka
+
+- name: Unarchive kafka binary downloaded file
+  unarchive:
+    remote_src: yes
+    src: "/opt/kafka_{{ KAFKA_SCALA_VERSION }}-{{ KAFKA_VERSION }}.tgz"
+    dest: /opt
+    owner: kafka
+
+- name: Create a symbolic link to kafka
+  file:
+    src: "/opt/kafka_{{ KAFKA_SCALA_VERSION }}-{{ KAFKA_VERSION }}"
+    dest: /opt/kafka
+    owner: kafka
+    group: kafka
+    state: link
+
+- name: Enable delete topic
+  lineinfile:
+    path: /opt/kafka/config/server.properties
+    line: delete.topic.enable = true
+    create: yes
+  notify: Restart kafka service
+
+- name: Configure logs dir
+  lineinfile:
+    path: /opt/kafka/config/server.properties
+    regexp: '^log.dirs='
+    line: log.dirs=/home/kafka/logs
+
+- name: Upload the kafka service file
+  copy:
+    src: files/kafka.service
+    dest: /etc/systemd/system/kafka.service
+    owner: kafka
+  notify: Start kafka service
+
